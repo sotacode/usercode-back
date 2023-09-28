@@ -1,12 +1,12 @@
 import { Injectable, InternalServerErrorException, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { validate as isUUID } from 'uuid'; 
 import { ProductImage } from './entities/product-image.entity';
-import { v4 as UUID } from "uuid";
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ProductsService {
@@ -21,7 +21,7 @@ export class ProductsService {
     @InjectRepository(ProductImage)
     private readonly productImageRepository: Repository<ProductImage>,
 
-    private readonly dataSource: DataSource
+    private readonly configService: ConfigService, 
 
   ) { }
 
@@ -34,7 +34,7 @@ export class ProductsService {
         images: files.map( file => {
           if(imagesParsed && imagesParsed.length>0){
             const {title} = imagesParsed.find(element => element.imageName == file.originalname)
-            return this.productImageRepository.create({url: file.originalname, titulo: title})
+            return this.productImageRepository.create({url: `${this.configService.get('HOST_API')}/files/product/${file.originalname}`, titulo: title})
           }
         })
       });
@@ -64,17 +64,18 @@ export class ProductsService {
     }
   }
 
-  async findOne(term: string) {
+  async findOne(id: string) {
     try {
       let product: Product;
-      if(isUUID(term)){
-        product = await this.productRepository.findOneBy({id: term});
+      if(isUUID(id)){
+        product = await this.productRepository.findOneBy({id});
       }else{
         throw new BadRequestException(`Producto buscado no existe.`)
       }
       if(!product){
-        throw new NotFoundException(`Producto con id: ${term} no encontrado.`)
+        throw new NotFoundException(`Producto con id: ${id} no encontrado.`)
       }
+      console.log(product)
       return product;
     } catch (error) {
       this.handleDBExeptions(error);
@@ -83,7 +84,7 @@ export class ProductsService {
 
   async findOnePlane(term: string){
     const {images = [], ...productDetails} = await this.findOne(term);
-    return {...productDetails, images: images.map( image => image.url)}
+    return {...productDetails, images: images.map( image => ({title: image.titulo, url: image.url}))}
   }
 
 
@@ -93,14 +94,5 @@ export class ProductsService {
       throw new BadRequestException(error.detail)
     this.logger.error(error);
     throw new InternalServerErrorException(`Unexpected error, check server logs!`)
-  }
-
-  async deleteAllProducts(){
-    const query = this.productRepository.createQueryBuilder('product');
-    try {
-      return query.delete().where({}).execute();
-    } catch (error) {
-      this.handleDBExeptions(error)
-    }
   }
 }

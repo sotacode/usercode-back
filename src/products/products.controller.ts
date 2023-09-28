@@ -40,8 +40,8 @@ export class ProductsController {
     return this.productsService.findAll(paginationDto);
   }
 
-  @Get(':term')
-  findOne(@Param('term') term: string) {
-    return this.productsService.findOnePlane(term);
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.productsService.findOnePlane(id);
   }
 }

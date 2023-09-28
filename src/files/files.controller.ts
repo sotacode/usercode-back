@@ -11,28 +11,7 @@ import { ConfigService } from '@nestjs/config';
 export class FilesController {
   constructor(
     private readonly filesService: FilesService,
-    
-    private readonly configService: ConfigService, 
   ) {}
-
-  @Post('product')
-  @UseInterceptors(FileInterceptor('file', {
-    fileFilter: fileFilter,
-    /* limits: {
-      fileSize: 1000
-    }, */
-    storage: diskStorage({
-      destination: './static/products',
-      filename: fileNamer
-    })
-  }))
-  uploadProductImage(@UploadedFile() file: Express.Multer.File ){
-    if(!file) throw new BadRequestException(`Make sure that the file is an image.`)
-    
-    const secureUrl = `${this.configService.get('HOST_API')}/files/product/${file.filename}`
-
-    return {file: secureUrl};
-  }
 
 
   @Get('product/:imageName')
