@@ -4,15 +4,6 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { v4 as UUID } from "uuid";
-import { Request } from 'express';
-import { fileFilter } from 'src/files/helpers/fileFilter.helper';
-
-function generateUniqueFileName (originalName: string): string{
-  const uniqueId = UUID();
-  const fileExtension = originalName.split('.').pop();
-  return `${uniqueId}.${fileExtension}`;
-};
 
 @Controller('products')
 export class ProductsController {
@@ -25,8 +16,7 @@ export class ProductsController {
       storage: diskStorage({
         destination: './static/products', 
         filename: (req, file, cb) => {
-          const uniqueFileName = generateUniqueFileName(file.originalname);
-          cb(null, uniqueFileName);
+          cb(null, file.originalname);
         },
       }),
       fileFilter: (req, file, cb) => {

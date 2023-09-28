@@ -29,8 +29,6 @@ export class ProductsService {
     try {
       let { images } = createProductDto;
       const imagesParsed: any[]= JSON.parse(images);
-      console.log(images)
-      console.log(imagesParsed)
       const product = this.productRepository.create({
         ...createProductDto,
         images: files.map( file => {
